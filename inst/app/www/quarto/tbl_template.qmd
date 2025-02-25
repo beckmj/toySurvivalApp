@@ -1,0 +1,27 @@
+---
+title: "Dataset Analysis"
+format:
+  html: default
+  pdf: default
+  docx: default
+params:
+  selected_df: "BMT"
+---
+
+```{r}
+#| include: false
+library(dplyr)
+
+df <- toySurvivalApp:::select_dataset(params$selected_df)
+
+# -- calculate summary values for report --
+df_summary <- df %>%
+  summarize(
+    across(where(is.numeric),
+           .fns = list(mean = mean, median = median))) %>%
+  tidyr::pivot_longer(everything(), names_sep='_', names_to=c('variable', '.value'))
+```
+
+## Overview
+
+The `r params$selected_df` dataset consists of `r nrow(df)` observations of `r ncol(df)` variables.
