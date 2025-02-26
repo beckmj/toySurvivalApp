@@ -1,7 +1,6 @@
 ---
 title: "Dataset Overview"
 format:
-  html: default
   pdf: default
   docx: default
 params:
@@ -54,10 +53,34 @@ df_summary %>%
   autofit()
 ```
 
-## Raw Data
+## Distributions
+We can re-use the same plotting functions in the application and the output.  Please
+note, exporting ggplot can be finicky.  Please select the "Editable Plots" export
+option to see two methods of generating plots that can be manipulated outside of
+R.
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+
+plot_df <- df %>%
+  select(where(is.numeric)) %>%
+  tidyr::pivot_longer(everything())
+
+# walk is used to prevent the printing of the plot indices
+purrr::walk(
+  c("Histogram", "Box Plot", "Density"),
+  function(x) print(toySurvivalApp:::make_eda_plot(plot_df, x)))
+
+```
+
+
+## Appendix: Raw Data Sample
 This section demonstrates that the same formatting visible in the app can be
 exported to print-ready documents.
 ```{r results="asis"}
 #| echo: false
-flextable(df) 
+df %>%
+  head(5) %>%
+  flextable() 
 ```

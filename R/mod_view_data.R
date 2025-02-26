@@ -21,42 +21,48 @@ mod_view_data_ui <- function(id) {
        # Data options: selection
        accordion_panel(
          "Dataset Options",
-         icon = bsicons::bs_icon("sliders"),
+         icon = bsicons::bs_icon("table"),
          selectInput(ns("data_btn"),
           "Available Datasets:",
           choices = c("BMT", "BRCAOV", "NCCTG Lung Cancer")),
+         radioButtons(ns("format_btn"),
+                      "Table Format",
+                      choices = c("Interactive", "Print-Ready")),
          radioButtons(ns("head_btn"),
                       "Preview Sample Only:",
                       choices = c("Yes", "No"))
      ),
 
-     # Viewing options: Interactive vs. Print Ready),
+     # Viewing options: ,
         accordion_panel(
-          "Viewing Options",
-          icon = bsicons::bs_icon("table"),
-          radioButtons(ns("format_btn"),
-                       "Table Format",
-                       choices = c("Interactive", "Print-Ready")),
-          radioButtons(ns("viz_btn"), #TODO: show density, histogram, or box plots
+          "Plot Options",
+          icon = bsicons::bs_icon("bar-chart-line-fill"),
+          radioButtons(ns("viz_btn"),
                        "Visualize Variables",
-                       choices = c("None", "Histogram", "Box Plot", "Density"))
+                       choices = c("Histogram", "Box Plot", "Density", "None")),
+          radioButtons(ns("viz_interact_btn"),
+                       "Plot Interactivity",
+                       choices = c("Yes", "No"))
         ),
 
-     # Export options: format and button
+     # Export options: format
        accordion_panel(
          "Export Options",
          icon = bsicons::bs_icon("journal-arrow-down"),
          selectInput(ns("file_btn"),
                       "Download Format:",
-                      choices = c("Word", "PDF", "HTML"),
+                      choices = c("Word", "PDF"),
                       selected = "Word")
        )
      ), # close accordion menu
 
     # Page Body
-    #uiOutput(ns("data_description")),
     shinyjs::disabled(downloadButton(ns("export_btn"), "Download Data Overview")),
-    uiOutput(ns("selected_df"))
+    br(),
+    fluidRow(
+      column(6, uiOutput(ns("selected_df"))),
+      column(6, mod_view_eda_ui(ns("eda")))
+    )
 
    )
   ) # close panel
@@ -77,7 +83,7 @@ mod_view_data_server <- function(id){
       df <- select_dataset(input$data_btn)
 
       if(input$head_btn == "Yes"){
-        df <- head(df, 20)
+        df <- head(df, 5)
       }
 
       # return for further processing
@@ -120,7 +126,14 @@ mod_view_data_server <- function(id){
         htmltools_value()
     })
 
-    # -- return data set name for analysis modules --
+    # child module is source of plots
+    d <- reactive({input$data_btn})
+    v <- reactive({input$viz_btn})
+    i <- reactive({input$viz_interact_btn})
+
+    mod_view_eda_server("eda", d, v, i)
+
+    # return data set name for analysis modules
     return(
       list(
       data_set = selected_df

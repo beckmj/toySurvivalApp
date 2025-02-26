@@ -4,6 +4,9 @@
 #' @param nm character indicating single dataset to select
 #'
 #' @returns data.frame containing survival information
+#' @examples
+#'
+#' select_dataset("BMT")
 #'
 #' @noRd
 select_dataset <- function(nm){
