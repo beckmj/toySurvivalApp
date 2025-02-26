@@ -1,5 +1,5 @@
 ---
-title: "Dataset Analysis"
+title: "Dataset Overview"
 format:
   html: default
   pdf: default
@@ -11,6 +11,7 @@ params:
 ```{r}
 #| include: false
 library(dplyr)
+library(flextable)
 
 df <- toySurvivalApp:::select_dataset(params$selected_df)
 
@@ -18,10 +19,45 @@ df <- toySurvivalApp:::select_dataset(params$selected_df)
 df_summary <- df %>%
   summarize(
     across(where(is.numeric),
-           .fns = list(mean = mean, median = median))) %>%
-  tidyr::pivot_longer(everything(), names_sep='_', names_to=c('variable', '.value'))
+           .fns = list(Mean = mean, Median = median)))
+
+df_summary_bullets <- df_summary %>%
+  tidyr::pivot_longer(everything(), names_sep='_', names_to=c('variable', '.value')) %>%
+  rowwise() %>%
+  mutate(display_text = glue::glue("{variable} | Mean: {format(round(Mean, 2), nsmall = 2)} | Median: {format(round(Median, 2), nsmall = 2)}"))
+
+bullet_list <- function(...) {
+  cat(paste0("* ", c(...), collapse = "\n"))
+  cat("\n")
+}
+
 ```
 
-## Overview
+## Introduction
 
-The `r params$selected_df` dataset consists of `r nrow(df)` observations of `r ncol(df)` variables.
+The `r params$selected_df` dataset consists of `r nrow(df)` observations of `r ncol(df)` variables.  Data can be transformed to markdown bulleted lists:
+
+```{r results="asis"}
+#| echo: false
+bullet_list(df_summary_bullets$display_text) 
+```
+
+## Dataset Summary
+This is the same information reformatted as a flextable.
+```{r results="asis"}
+#| echo: false
+df_summary %>%
+  flextable() %>% 
+  colformat_double() %>% 
+  separate_header() %>% 
+  align(align = "center", part = "all") %>%
+  autofit()
+```
+
+## Raw Data
+This section demonstrates that the same formatting visible in the app can be
+exported to print-ready documents.
+```{r results="asis"}
+#| echo: false
+flextable(df) 
+```

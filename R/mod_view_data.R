@@ -34,13 +34,12 @@ mod_view_data_ui <- function(id) {
         accordion_panel(
           "Viewing Options",
           icon = bsicons::bs_icon("table"),
-          radioButtons(ns("head_btn"),
-                       "Show Field Descriptions:",
-                       choices = c("Yes", "No"),
-                       selected = "No"),
           radioButtons(ns("format_btn"),
-                       "Data Format",
-                       choices = c("Interactive", "Print-Ready"))
+                       "Table Format",
+                       choices = c("Interactive", "Print-Ready")),
+          radioButtons(ns("viz_btn"), #TODO: show density, histogram, or box plots
+                       "Visualize Variables",
+                       choices = c("None", "Histogram", "Box Plot", "Density"))
         ),
 
      # Export options: format and button
@@ -56,7 +55,7 @@ mod_view_data_ui <- function(id) {
 
     # Page Body
     #uiOutput(ns("data_description")),
-    shinyjs::disabled(downloadButton(ns("export_btn"), "Download Table")),
+    shinyjs::disabled(downloadButton(ns("export_btn"), "Download Data Overview")),
     uiOutput(ns("selected_df"))
 
    )
@@ -111,12 +110,6 @@ mod_view_data_server <- function(id){
     )
 
 # App Body ----------------------------------------------------------------
-
-
-    # output$data_description <- renderUI({ #TODO: Embed HTML
-    #
-    #
-    # })
 
     observe(shinyjs::enable("export_btn")) # workaround for default inaction
 
