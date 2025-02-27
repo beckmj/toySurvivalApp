@@ -18,7 +18,8 @@ df <- toySurvivalApp:::select_dataset(params$selected_df)
 df_summary <- df %>%
   summarize(
     across(where(is.numeric),
-           .fns = list(Mean = mean, Median = median)))
+           .fns = list(Mean = function(x) mean(x, na.rm = TRUE),
+                       Median = function(x) median(x, na.rm = TRUE))))
 
 df_summary_bullets <- df_summary %>%
   tidyr::pivot_longer(everything(), names_sep='_', names_to=c('variable', '.value')) %>%
@@ -55,9 +56,8 @@ df_summary %>%
 
 ## Distributions
 We can re-use the same plotting functions in the application and the output.  Please
-note, exporting ggplot can be finicky.  Please select the "Editable Plots" export
-option to see two methods of generating plots that can be manipulated outside of
-R.
+note, exporting ggplot can be finicky.  Please select the "Download Editable Plots" export
+option for vector graphic versions.
 ```{r}
 #| echo: false
 #| message: false

@@ -17,8 +17,12 @@ app_ui <- function(request) {
       underline = TRUE
     ),
     mod_view_data_ui("data"),
-    nav_panel(title = "Two", p("Second tab content.")),
-    nav_panel(title = "Three", p("Third tab content")),
+    nav_panel(title = "About",
+              p("This application is a proof-of-concept demonstrating
+                the candidate's ability to create a well-organized Shiny app.
+                Particular focus was given to the exportability of results."),
+              br(),
+              p("Data sources are taken from the R survminer package.")),
     nav_spacer(),
     nav_menu(
       title = "Links",

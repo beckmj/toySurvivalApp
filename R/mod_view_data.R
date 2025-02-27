@@ -8,6 +8,7 @@
 #'
 #' @importFrom shiny NS tagList
 #' @import flextable
+#' @import reactable
 mod_view_data_ui <- function(id) {
   ns <- NS(id)
 
@@ -42,7 +43,9 @@ mod_view_data_ui <- function(id) {
                        choices = c("Histogram", "Box Plot", "Density", "None")),
           radioButtons(ns("viz_interact_btn"),
                        "Plot Interactivity",
-                       choices = c("Yes", "No"))
+                       choices = c("Yes", "No")),
+          downloadButton(ns("ppt_btn"),
+                         "Download Editable Plots")
         ),
 
      # Export options: format
@@ -60,8 +63,12 @@ mod_view_data_ui <- function(id) {
     shinyjs::disabled(downloadButton(ns("export_btn"), "Download Data Overview")),
     br(),
     fluidRow(
-      column(6, uiOutput(ns("selected_df"))),
-      column(6, mod_view_eda_ui(ns("eda")))
+      column(6,
+             h3("Data Preview"),
+             uiOutput(ns("selected_df"))),
+      column(6,
+             h3("Exploratory Plots"),
+             mod_view_eda_ui(ns("eda")))
     )
 
    )
@@ -74,6 +81,10 @@ mod_view_data_ui <- function(id) {
 mod_view_data_server <- function(id){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
+
+    observe({
+      shinyjs::enable("export_btn")
+      shinyjs::enable("ppt_btn")}) # workaround for default inaction
 
 
 # Apply Options -----------------------------------------------------------
@@ -91,17 +102,26 @@ mod_view_data_server <- function(id){
 
       })
 
+    output$ppt_btn <- downloadHandler(
+      filename = "editable_plots.pptx",
+      content = function(file){
+        download_plots(file, input$data_btn)
+      }
+    )
+
+# App Body ----------------------------------------------------------------
+
+    # -- Download data summary --
     table_name <- reactive({
 
       formats = list(
         "Word" = ".docx",
-        "PDF" = ".pdf",
-        "HTML" = ".html"
+        "PDF" = ".pdf"
       )
 
       paste0(input$data_btn, formats[[input$file_btn]])
 
-      })
+    })
 
     output$export_btn <- downloadHandler(
       filename = function() table_name(),
@@ -115,16 +135,38 @@ mod_view_data_server <- function(id){
       }
     )
 
-# App Body ----------------------------------------------------------------
+    # -- determine which kind of data table to show --
+    print_view <- eventReactive({c(input$format_btn, input$head_btn)}, {
 
-    observe(shinyjs::enable("export_btn")) # workaround for default inaction
+      selected_df() %>%
+          flextable() %>%
+          htmltools_value()
+
+    })
+
+    interact_view <- eventReactive({c(input$format_btn, input$head_btn)}, {
+
+        selected_df() %>%
+          reactable(
+            bordered = TRUE,
+            striped = TRUE,
+            highlight = TRUE
+          )
+    })
 
     output$selected_df <- renderUI({
 
-      selected_df() %>%
-        flextable() %>%
-        htmltools_value()
+
+      if(input$format_btn == "Interactive"){
+        interact_view() %>% renderReactable()
+      } else {
+        print_view()
+      }
+
+
     })
+
+    # -- Handle the plotting --
 
     # child module is source of plots
     d <- reactive({input$data_btn})
