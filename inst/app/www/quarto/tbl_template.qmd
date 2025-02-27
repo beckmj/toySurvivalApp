@@ -1,0 +1,86 @@
+---
+title: "Dataset Overview"
+format:
+  pdf: default
+  docx: default
+params:
+  selected_df: "BMT"
+---
+
+```{r}
+#| include: false
+library(dplyr)
+library(flextable)
+
+df <- toySurvivalApp:::select_dataset(params$selected_df)
+
+# -- calculate summary values for report --
+df_summary <- df %>%
+  summarize(
+    across(where(is.numeric),
+           .fns = list(Mean = function(x) mean(x, na.rm = TRUE),
+                       Median = function(x) median(x, na.rm = TRUE))))
+
+df_summary_bullets <- df_summary %>%
+  tidyr::pivot_longer(everything(), names_sep='_', names_to=c('variable', '.value')) %>%
+  rowwise() %>%
+  mutate(display_text = glue::glue("{variable} | Mean: {format(round(Mean, 2), nsmall = 2)} | Median: {format(round(Median, 2), nsmall = 2)}"))
+
+bullet_list <- function(...) {
+  cat(paste0("* ", c(...), collapse = "\n"))
+  cat("\n")
+}
+
+```
+
+## Introduction
+
+The `r params$selected_df` dataset consists of `r nrow(df)` observations of `r ncol(df)` variables.  Data can be transformed to markdown bulleted lists:
+
+```{r results="asis"}
+#| echo: false
+bullet_list(df_summary_bullets$display_text) 
+```
+
+## Dataset Summary
+This is the same information reformatted as a flextable.
+```{r results="asis"}
+#| echo: false
+df_summary %>%
+  flextable() %>% 
+  colformat_double() %>% 
+  separate_header() %>% 
+  align(align = "center", part = "all") %>%
+  autofit()
+```
+
+## Distributions
+We can re-use the same plotting functions in the application and the output.  Please
+note, exporting ggplot can be finicky.  Please select the "Download Editable Plots" export
+option for vector graphic versions.
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+
+plot_df <- df %>%
+  select(where(is.numeric)) %>%
+  tidyr::pivot_longer(everything())
+
+# walk is used to prevent the printing of the plot indices
+purrr::walk(
+  c("Histogram", "Box Plot", "Density"),
+  function(x) print(toySurvivalApp:::make_eda_plot(plot_df, x)))
+
+```
+
+
+## Appendix: Raw Data Sample
+This section demonstrates that the same formatting visible in the app can be
+exported to print-ready documents.
+```{r results="asis"}
+#| echo: false
+df %>%
+  head(5) %>%
+  flextable() 
+```

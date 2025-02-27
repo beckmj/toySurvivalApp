@@ -1,3 +1,6 @@
+link_shiny <- tags$a(shiny::icon("github"), "Shiny", href = "https://github.com/rstudio/shiny", target = "_blank")
+link_posit <- tags$a(shiny::icon("r-project"), "Posit", href = "https://posit.co", target = "_blank")
+
 #' The application User-Interface
 #'
 #' @param request Internal parameter for `{shiny}`.
@@ -5,12 +8,27 @@
 #' @import shiny
 #' @noRd
 app_ui <- function(request) {
-  tagList(
-    # Leave this function for adding external resources
-    golem_add_external_resources(),
-    # Your application UI logic
-    fluidPage(
-      golem::golem_welcome_page() # Remove this line to start building your UI
+  golem_add_external_resources()
+
+  page_navbar(
+    title = "survminer Shiny Demo",
+    navbar_options = navbar_options(
+      bg = "#0062cc",
+      underline = TRUE
+    ),
+    mod_view_data_ui("data"),
+    nav_panel(title = "About",
+              p("This application is a proof-of-concept demonstrating
+                the candidate's ability to create a well-organized Shiny app.
+                Particular focus was given to the exportability of results."),
+              br(),
+              p("Data sources are taken from the R survminer package.")),
+    nav_spacer(),
+    nav_menu(
+      title = "Links",
+      align = "right",
+      nav_item(link_shiny),
+      nav_item(link_posit)
     )
   )
 }
